@@ -1,4 +1,6 @@
 import { Hono } from "hono";
+import { sql } from "drizzle-orm";
+import { drizzlePgClient } from "@lib/clients/drizzle";
 
 const app = new Hono()
 	.get("/", (c) => {
@@ -7,6 +9,11 @@ const app = new Hono()
 
 	.get("/health", (c) => {
 		return c.json({ status: "ok" });
+	})
+
+	.get("/db-check", async (c) => {
+		const result = await drizzlePgClient.execute(sql`SELECT current_database();`);
+		return c.json({ database: result });
 	});
 
 export default {
