@@ -1,10 +1,11 @@
 import { Hono } from "hono";
 import { sql } from "drizzle-orm";
 import { drizzlePgClient } from "@lib/clients/drizzle";
+import { authRoute } from "@api/routes/auth";
 
 const app = new Hono()
 	.get("/", (c) => {
-		return c.json({ message: "Hello Hono!" });
+		return c.json({ message: "Auth API Server" });
 	})
 
 	.get("/health", (c) => {
@@ -14,7 +15,9 @@ const app = new Hono()
 	.get("/db-check", async (c) => {
 		const result = await drizzlePgClient.execute(sql`SELECT current_database();`);
 		return c.json({ database: result });
-	});
+	})
+
+	.route("/", authRoute);
 
 export default {
 	port: process.env.BACKEND_PORT ?? 3002,

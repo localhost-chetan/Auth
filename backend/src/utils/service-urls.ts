@@ -5,3 +5,11 @@ export const getPostgresUrl = () => {
 	}
 	return DATABASE_URL;
 };
+
+export const getJWTPrivateKey = () => {
+	const JWT_PRIVATE_KEY = process.env.JWT_PRIVATE_KEY;
+	if (!JWT_PRIVATE_KEY) {
+		throw new Error("JWT_PRIVATE_KEY is not defined in environment variables");
+	}
+	return JWT_PRIVATE_KEY;
+};
