@@ -1,9 +1,10 @@
-import { type User, userTable } from "@/db/schema";
+import { userTable } from "@/db/schema";
 import { drizzlePgClient } from "@lib/clients/drizzle";
 import { type SignUpInput } from "@api/types/user";
 import { type Context } from "hono";
 import { sql } from "drizzle-orm";
 import { setAccessTokenCookie } from "@api/services/jwt";
+import { sendVerificationEmail } from "@api/services/mailtrap";
 
 export const signUp = async (c: Context, { name, email, password }: SignUpInput) => {
 	const userAlreadyExists = await drizzlePgClient.execute(sql`
@@ -20,17 +21,29 @@ export const signUp = async (c: Context, { name, email, password }: SignUpInput)
 	});
 	const verificationToken = Math.round(Math.random() * 10_00_000).toString();
 
-	const newUser = (await drizzlePgClient.execute(sql`
-        INSERT INTO ${userTable} (name, email, password_hash, verification_token, verification_token_expires_at)
-	    VALUES (
-	        ${name},
-	        ${email},
-	        ${passwordHash},
-	        ${verificationToken},
-	        NOW() + INTERVAL '1 DAY'
-	    )
-	    RETURNING *
-	`)) as User[];
+	// using raw sql
+	// const newUser = await drizzlePgClient.execute(sql`
+	//     INSERT INTO ${userTable} (name, email, password_hash, verification_token, verification_token_expires_at)
+	//     VALUES (
+	//         ${name},
+	//         ${email},
+	//         ${passwordHash},
+	//         ${verificationToken},
+	//         NOW() + INTERVAL '10 MINUTES'
+	//     )
+	//     RETURNING *
+	// `);
+
+	const newUser = await drizzlePgClient
+		.insert(userTable)
+		.values({
+			name,
+			email,
+			passwordHash,
+			verificationToken,
+			verificationTokenExpiresAt: sql`Now() + INTERVAL '10 MINUTES'`,
+		})
+		.returning();
 
 	// Type guard
 	const createdUser = newUser.at(0);
@@ -39,6 +52,14 @@ export const signUp = async (c: Context, { name, email, password }: SignUpInput)
 	}
 
 	await setAccessTokenCookie(c, { id: createdUser.id });
+	try {
+		await sendVerificationEmail(createdUser.email, createdUser.verificationToken);
+	} catch (error) {
+		if (error instanceof Error) {
+			return c.json({ error: error.message }, 400);
+		}
+		return c.json({ error: "Something went wrong!" }, 400);
+	}
 
 	return c.json(
 		{ message: "New User created successfully!", data: createdUser },

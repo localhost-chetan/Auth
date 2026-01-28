@@ -13,3 +13,11 @@ export const getJWTPrivateKey = () => {
 	}
 	return JWT_PRIVATE_KEY;
 };
+
+export const getMailtrapAPIKey = () => {
+	const MAILTRAP_API_KEY = process.env.MAILTRAP_API_KEY;
+	if (!MAILTRAP_API_KEY) {
+		throw new Error("MAILTRAP_API_KEY is not defined in environment variables");
+	}
+	return MAILTRAP_API_KEY;
+};

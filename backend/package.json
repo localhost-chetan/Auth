@@ -1,7 +1,7 @@
 {
 	"name": "backend",
 	"scripts": {
-		"dev": "bun run --sql-preconnect --hot src/index.ts",
+		"dev": "bun run --hot src/index.ts",
 		"db:push": "bunx --bun drizzle-kit push"
 	},
 	"prettier": {
@@ -17,6 +17,7 @@
 	"dependencies": {
 		"drizzle-orm": "^0.45.1",
 		"hono": "^4.11.5",
+		"mailtrap": "^4.4.0",
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {
