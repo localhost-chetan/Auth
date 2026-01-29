@@ -1,6 +1,6 @@
 import { userTable } from "@/db/schema";
 import { drizzlePgClient } from "@lib/clients/drizzle";
-import { type SignUpInput } from "@api/types/user";
+import { type VerificationCode, type SignUpInput } from "@api/types/user";
 import { type Context } from "hono";
 import { sql } from "drizzle-orm";
 import { setAccessTokenCookie } from "@api/services/jwt";
@@ -82,4 +82,36 @@ export const signIn = async (c: Context) => {
 export const logOut = (c: Context) => {
 	deleteCookie(c, "access_token");
 	return c.json({ message: "Logged out successfully", success: true });
+};
+
+export const verifyEmail = async (c: Context, verificationCode: VerificationCode) => {
+	const isUserExists = await drizzlePgClient.execute(sql`
+		SELECT
+			is_verified,
+			verification_token,
+			verification_token_expires_at
+		FROM
+			public.users
+		WHERE
+			verification_token = ${verificationCode}
+				AND
+			verification_token_expires_at > NOW();
+		`);
+
+	console.log("🚀 ~ user.ts:99 ~ verifyEmail ~ isUserExists: ", isUserExists);
+
+	if (isUserExists.length <= 0) {
+		return c.json({ error: `Your verification token is either invalid or expred` }, 400);
+	}
+
+	await drizzlePgClient.execute(sql`
+		UPDATE
+			public.users
+		SET
+			is_verified = TRUE,
+			verification_token = NULL,
+			verification_token_expires_at = NULL;
+		`);
+
+	return c.json({ message: "Successfully verified your email" });
 };

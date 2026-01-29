@@ -11,8 +11,8 @@ export const userTable = pgTable(
 		isVerified: boolean().default(false),
 		resetPasswordToken: varchar({ length: 255 }),
 		resetPasswordExpiresAt: timestamp(),
-		verificationToken: varchar({ length: 255 }).notNull(),
-		verificationTokenExpiresAt: timestamp().notNull(),
+		verificationToken: varchar({ length: 255 }),
+		verificationTokenExpiresAt: timestamp(),
 
 		// Timestamps
 		createdAt: timestamp().defaultNow().notNull(),
