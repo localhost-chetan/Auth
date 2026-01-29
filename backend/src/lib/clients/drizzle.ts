@@ -4,7 +4,7 @@ import { getPostgresUrl } from "@utils/service-urls";
 
 const sql = new SQL({
 	url: getPostgresUrl(),
-	max: 10,
+	max: 20,
 	maxLifetime: 60,
 });
 
