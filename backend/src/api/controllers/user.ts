@@ -5,6 +5,7 @@ import { type Context } from "hono";
 import { sql } from "drizzle-orm";
 import { setAccessTokenCookie } from "@api/services/jwt";
 import { sendVerificationEmail } from "@api/services/mail";
+import { deleteCookie } from "hono/cookie";
 
 export const signUp = async (c: Context, { name, email, password }: SignUpInput) => {
 	const userAlreadyExists = await drizzlePgClient.execute(sql`
@@ -76,4 +77,9 @@ export const signUp = async (c: Context, { name, email, password }: SignUpInput)
 
 export const signIn = async (c: Context) => {
 	return c.json({ message: "Sign In Endpoint" });
+};
+
+export const logOut = (c: Context) => {
+	deleteCookie(c, "access_token");
+	return c.json({ message: "Logged out successfully", success: true });
 };

@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { signIn, signUp } from "@api/controllers/user";
+import { logOut, signIn, signUp } from "@api/controllers/user";
 import { validator } from "hono/validator";
 import { signUpSchema } from "@api/types/user";
 
@@ -22,4 +22,8 @@ export const authRoute = new Hono()
 		},
 	)
 
-	.get("/sign-in", signIn);
+	.get("/sign-in", signIn)
+	
+	.delete("/logout", (c) => {
+		return logOut(c);
+	});
