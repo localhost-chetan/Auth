@@ -4,7 +4,8 @@ import { getPostgresUrl } from "@utils/service-urls";
 
 const sql = new SQL({
 	url: getPostgresUrl(),
-	max: 100,
-	maxLifetime: 60 * 1,
+	max: 10,
+	maxLifetime: 60,
 });
-export const drizzlePgClient = drizzle({ client: sql, casing: "snake_case" });
+
+export const drizzlePgClient = drizzle(sql, { casing: "snake_case", logger: true });

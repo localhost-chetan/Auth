@@ -4,14 +4,12 @@ import { type SignUpInput } from "@api/types/user";
 import { type Context } from "hono";
 import { sql } from "drizzle-orm";
 import { setAccessTokenCookie } from "@api/services/jwt";
-import { sendVerificationEmail } from "@api/services/mailtrap";
+import { sendVerificationEmail } from "@api/services/mail";
 
 export const signUp = async (c: Context, { name, email, password }: SignUpInput) => {
 	const userAlreadyExists = await drizzlePgClient.execute(sql`
         SELECT 1 FROM ${userTable} WHERE email = ${email} LIMIT 1;
     `);
-
-	console.log("🚀 ~ user.ts:12 ~ signUp ~ userAlreadyExists: ", userAlreadyExists);
 
 	if (userAlreadyExists.length >= 1) {
 		return c.json({ error: "User with this email already exists" }, 400);
@@ -62,7 +60,14 @@ export const signUp = async (c: Context, { name, email, password }: SignUpInput)
 	}
 
 	return c.json(
-		{ message: "New User created successfully!", data: createdUser },
+		{
+			message: "New User created successfully!",
+			data: {
+				id: createdUser.id,
+				name: createdUser.name,
+				email: createdUser.email,
+			},
+		},
 		{
 			status: 201,
 		},

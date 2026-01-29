@@ -1,5 +1,5 @@
-import { User } from "@/db/schema";
 import z from "zod";
+import { type User } from "@/db/schema";
 
 export const signUpSchema = z.object({
 	name: z.string().min(1).max(255, { error: "Name must be at most 255 characters" }),
