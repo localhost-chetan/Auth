@@ -6,6 +6,7 @@ import { sql } from "drizzle-orm";
 import { setAccessTokenCookie } from "@api/services/jwt";
 import { sendVerificationEmail } from "@api/services/mail";
 import { deleteCookie } from "hono/cookie";
+import { generateOTP } from "../services/otp";
 
 export const signUp = async (c: Context, { name, email, password }: SignUpInput) => {
 	const userAlreadyExists = await drizzlePgClient.execute(sql`
@@ -18,7 +19,11 @@ export const signUp = async (c: Context, { name, email, password }: SignUpInput)
 	const passwordHash = await Bun.password.hash(password, {
 		algorithm: "bcrypt",
 	});
-	const verificationToken = Math.round(Math.random() * 10_00_000).toString();
+	// const verificationToken = Math.round(Math.random() * 10_00_000).toString();
+	const verificationToken = generateOTP();
+
+	console.log("🚀 ~ user.ts:25 ~ signUp ~ verificationToken: ", verificationToken);
+
 
 	// using raw sql
 	// const newUser = await drizzlePgClient.execute(sql`
