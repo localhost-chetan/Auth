@@ -1,11 +1,10 @@
 import { sign } from "hono/jwt";
-import { type JWTPayload } from "@api/types/user";
+import { type UserId, type JWTPayload } from "@api/types/user";
 import { Context } from "hono";
-import { type User } from "@/db/schema";
 import { getJWTPrivateKey } from "@utils/service-urls";
 import { setCookie } from "hono/cookie";
 
-const generateAccessToken = async (userId: Pick<User, "id">) => {
+const generateAccessToken = async (userId: UserId) => {
 	const payload: JWTPayload = {
 		sub: userId,
 		exp: Date.now() / 1000 + 60 * 10, // Access Token expires in 10 minutes
@@ -14,7 +13,7 @@ const generateAccessToken = async (userId: Pick<User, "id">) => {
 	return sign(payload, getJWTPrivateKey(), "HS256");
 };
 
-export const setAccessTokenCookie = async (c: Context, userId: Pick<User, "id">) => {
+export const setAccessTokenCookie = async (c: Context, userId: UserId) => {
 	const isProduction = process.env.NODE_ENV === "production";
 
 	setCookie(c, "access_token", await generateAccessToken(userId), {

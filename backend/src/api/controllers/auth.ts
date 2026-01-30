@@ -1,14 +1,14 @@
 import { userTable } from "@/db/schema";
 import { drizzlePgClient } from "@lib/clients/drizzle";
-import { type VerificationCode, type SignUpInput } from "@api/types/user";
+import { type VerificationCode, type SignUpInput, type SignInInput } from "@api/types/user";
 import { type Context } from "hono";
-import { sql } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 import { setAccessTokenCookie } from "@api/services/jwt";
 import { sendVerificationEmail } from "@api/services/mail";
 import { deleteCookie } from "hono/cookie";
 import { generateOTP } from "../services/otp";
 
-export const signUp = async (c: Context, { name, email, password }: SignUpInput) => {
+export const register = async (c: Context, { name, email, password }: SignUpInput) => {
 	const userAlreadyExists = await drizzlePgClient.execute(sql`
         SELECT 1 FROM ${userTable} WHERE email = ${email} LIMIT 1;
     `);
@@ -24,6 +24,8 @@ export const signUp = async (c: Context, { name, email, password }: SignUpInput)
 
 	console.log("🚀 ~ user.ts:25 ~ signUp ~ verificationToken: ", verificationToken);
 
+
+	console.log("🚀 ~ auth.ts:23 ~ signUp ~ verificationToken: ", verificationToken);
 
 	// using raw sql
 	// const newUser = await drizzlePgClient.execute(sql`
@@ -55,7 +57,7 @@ export const signUp = async (c: Context, { name, email, password }: SignUpInput)
 		return c.json({ error: "User creation failed!" }, 500);
 	}
 
-	await setAccessTokenCookie(c, { id: createdUser.id });
+	await setAccessTokenCookie(c, createdUser.id);
 	try {
 		await sendVerificationEmail(createdUser.email, createdUser.verificationToken);
 	} catch (error) {
@@ -80,8 +82,59 @@ export const signUp = async (c: Context, { name, email, password }: SignUpInput)
 	);
 };
 
-export const signIn = async (c: Context) => {
-	return c.json({ message: "Sign In Endpoint" });
+export const login = async (c: Context, loginCredentails: SignInInput) => {
+	const { email, password } = loginCredentails;
+
+	// const users = await drizzlePgClient.execute(sql`
+	// 	SELECT
+	// 		id,
+	// 		email,
+	// 		password,
+	// 		last_login
+	// 	FROM
+	// 		public.users
+	// 	WHERE
+	// 		email = ${email};
+	// 	`);
+
+	const users = await drizzlePgClient
+		.select({
+			id: userTable.id,
+			email: userTable.email,
+			passwordHash: userTable.passwordHash,
+			lastLogin: userTable.lastLogin,
+		})
+		.from(userTable)
+		.where(eq(userTable.email, email))
+		.limit(1);
+
+	const user = users.at(0);
+	if (!user) {
+		return c.json({ error: "Invalid credentails", success: false }, 400);
+	}
+
+	if (user.email !== email) {
+		return c.json({ success: false, message: "Invalid email id" });
+	}
+
+	const isPasswordValid = await Bun.password.verify(password, user.passwordHash);
+
+	if (!isPasswordValid) {
+		return c.json({ success: false, message: `Invalid password` });
+	}
+
+	setAccessTokenCookie(c, user.id);
+
+	await drizzlePgClient.execute(sql`
+		UPDATE
+			public.users
+		SET
+			last_login = NOW()
+		WHERE
+			id = ${user.id};
+		`);
+
+	return c.json({ message: "Logged in successfully" }, 201);
 };
 
 export const logOut = (c: Context) => {
@@ -90,18 +143,32 @@ export const logOut = (c: Context) => {
 };
 
 export const verifyEmail = async (c: Context, verificationCode: VerificationCode) => {
-	const isUserExists = await drizzlePgClient.execute(sql`
-		SELECT
-			is_verified,
-			verification_token,
-			verification_token_expires_at
-		FROM
-			public.users
-		WHERE
-			verification_token = ${verificationCode}
-				AND
-			verification_token_expires_at > NOW();
-		`);
+	// const isUserExists = await drizzlePgClient.execute(sql`
+	// 	SELECT
+	// 		is_verified,
+	// 		verification_token,
+	// 		verification_token_expires_at
+	// 	FROM
+	// 		public.users
+	// 	WHERE
+	// 		verification_token = ${verificationCode}
+	// 			AND
+	// 		verification_token_expires_at > NOW();
+	// 	`);
+
+	const isUserExists = await drizzlePgClient
+		.select({
+			isVerified: userTable.isVerified,
+			verificationToken: userTable.verificationToken,
+			verificationTokenExpiresAT: userTable.verificationTokenExpiresAt,
+		})
+		.from(userTable)
+		.where(
+			and(
+				eq(userTable.verificationToken, verificationCode),
+				gt(userTable.verificationTokenExpiresAt, sql`NOW()`),
+			),
+		);
 
 	console.log("🚀 ~ user.ts:99 ~ verifyEmail ~ isUserExists: ", isUserExists);
 
