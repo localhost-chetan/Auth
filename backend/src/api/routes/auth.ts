@@ -1,13 +1,14 @@
 import { Hono } from "hono";
-import { logOut, signIn, signUp, verifyEmail } from "@api/controllers/user";
+import { logOut, register, login, verifyEmail } from "@api/controllers/auth";
 import { validator } from "hono/validator";
-import { signUpSchema, verificationSchema } from "@api/types/user";
+import { signInSchema, signUpSchema, verificationSchema } from "@api/types/user";
 
 export const authRoute = new Hono()
 	.basePath("/api/auth/")
 
+	// /register
 	.post(
-		"/sign-up",
+		"/register",
 		validator("json", (value, c) => {
 			const { success, data } = signUpSchema.safeParse(value);
 
@@ -18,16 +19,31 @@ export const authRoute = new Hono()
 		}),
 		(c) => {
 			const validBody = c.req.valid("json");
-			return signUp(c, validBody);
+			return register(c, validBody);
 		},
 	)
 
-	.get("/sign-in", signIn)
+	// login
+	.post(
+		"/login",
+		validator("json", (value, c) => {
+			const { success, data } = signInSchema.safeParse(value);
+			if (success) return data;
 
+			return c.json({ error: `Invalid request body, Please provide correct JSON data` }, 400);
+		}),
+		(c) => {
+			const validBody = c.req.valid("json");
+			return login(c, validBody);
+		},
+	)
+
+	// logout
 	.delete("/logout", (c) => {
 		return logOut(c);
 	})
 
+	// /verify-email
 	.post(
 		"/verify-email",
 		validator("json", (value, c) => {
