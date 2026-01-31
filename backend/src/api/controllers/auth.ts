@@ -1,12 +1,14 @@
 import { userTable } from "@/db/schema";
 import { drizzlePgClient } from "@lib/clients/drizzle";
-import { type VerificationCode, type SignUpInput, type SignInInput } from "@api/types/user";
+import { type VerificationCode, type SignUpInput, type SignInInput, type Email } from "@api/types/user";
 import { type Context } from "hono";
 import { and, eq, gt, sql } from "drizzle-orm";
 import { setAccessTokenCookie } from "@api/services/jwt";
-import { sendVerificationEmail } from "@api/services/mail";
+import { sendResetPasswordResetEmail, sendVerificationEmail } from "@api/services/mail";
 import { deleteCookie } from "hono/cookie";
-import { generateOTP } from "../services/otp";
+import { generateOTP } from "@api/services/otp";
+import { randomUUIDv7 } from "bun";
+import { getClientUrl } from "@utils/service-urls";
 
 export const register = async (c: Context, { name, email, password }: SignUpInput) => {
 	const userAlreadyExists = await drizzlePgClient.execute(sql`
@@ -23,7 +25,6 @@ export const register = async (c: Context, { name, email, password }: SignUpInpu
 	const verificationToken = generateOTP();
 
 	console.log("🚀 ~ user.ts:25 ~ signUp ~ verificationToken: ", verificationToken);
-
 
 	console.log("🚀 ~ auth.ts:23 ~ signUp ~ verificationToken: ", verificationToken);
 
@@ -59,6 +60,10 @@ export const register = async (c: Context, { name, email, password }: SignUpInpu
 
 	await setAccessTokenCookie(c, createdUser.id);
 	try {
+		if (!createdUser.verificationToken) {
+			return c.json({ error: "Something wrong with verification token" }, 500);
+		}
+
 		await sendVerificationEmail(createdUser.email, createdUser.verificationToken);
 	} catch (error) {
 		if (error instanceof Error) {
@@ -173,7 +178,7 @@ export const verifyEmail = async (c: Context, verificationCode: VerificationCode
 	console.log("🚀 ~ user.ts:99 ~ verifyEmail ~ isUserExists: ", isUserExists);
 
 	if (isUserExists.length <= 0) {
-		return c.json({ error: `Your verification token is either invalid or expred` }, 400);
+		return c.json({ error: `Your verification token is either invalid or expired` }, 400);
 	}
 
 	await drizzlePgClient.execute(sql`
@@ -186,4 +191,35 @@ export const verifyEmail = async (c: Context, verificationCode: VerificationCode
 		`);
 
 	return c.json({ message: "Successfully verified your email" });
+};
+
+export const forgotPassword = async (c: Context, email: Email) => {
+	const users = await drizzlePgClient.select({ id: userTable }).from(userTable).where(eq(userTable.email, email));
+
+	console.log("🚀 ~ auth.ts:193 ~ forgotPassword ~ users: ", users);
+
+	const user = users.at(0);
+
+	if (!user) {
+		return c.json({ error: "User with this email not found!" }, 400);
+	}
+
+	// Generate reset token
+	const resetPasswordToken = randomUUIDv7("base64url", Date.now());
+	// const resetPasswordTokenExpiresAt = (Date.now() / 1000) * 60 * 60; // 1 hour
+
+	await drizzlePgClient.execute(sql`
+		UPDATE
+			public.users
+		SET
+			reset_password_token = ${resetPasswordToken},
+			reset_password_token_expires_at = NOW() + INTERVAL '1 HOUR'
+		WHERE
+			id = ${user.id.id};
+		`);
+
+	const resetUrl = `${getClientUrl()}/reset-password/${resetPasswordToken}`;
+	await sendResetPasswordResetEmail(email, resetUrl);
+
+	return c.json({ success: true, message: "Password reset email sent successfully" }, 200);
 };

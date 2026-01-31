@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { logOut, register, login, verifyEmail } from "@api/controllers/auth";
+import { logOut, register, login, verifyEmail, forgotPassword } from "@api/controllers/auth";
 import { validator } from "hono/validator";
 import { signInSchema, signUpSchema, verificationSchema } from "@api/types/user";
 
@@ -56,5 +56,22 @@ export const authRoute = new Hono()
 		(c) => {
 			const { verificationCode } = c.req.valid("json");
 			return verifyEmail(c, verificationCode);
+		},
+	)
+
+	// forgot-password
+	.post(
+		"forgot-password",
+		validator("json", (value, c) => {
+			const emailSchema = signInSchema.pick({ email: true });
+			const { success, data } = emailSchema.safeParse(value);
+
+			if (success) return data;
+
+			return c.json({ error: "Invalid email id!" }, 400);
+		}),
+		(c) => {
+			const { email } = c.req.valid("json");
+			return forgotPassword(c, email);
 		},
 	);

@@ -21,3 +21,11 @@ export const getResendAPIKey = () => {
 	}
 	return RESEND_API_KEY;
 };
+
+export const getClientUrl = () => {
+	const CLIENT_URL = process.env.CLIENT_URL;
+	if (!CLIENT_URL) {
+		throw new Error("CLIENT_URL is not defined in environment variables");
+	}
+	return CLIENT_URL;
+};

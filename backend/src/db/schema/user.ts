@@ -10,7 +10,7 @@ export const userTable = pgTable(
 		lastLogin: timestamp().defaultNow(),
 		isVerified: boolean().default(false),
 		resetPasswordToken: varchar({ length: 255 }),
-		resetPasswordExpiresAt: timestamp(),
+		resetPasswordTokenExpiresAt: timestamp(),
 		verificationToken: varchar({ length: 255 }),
 		verificationTokenExpiresAt: timestamp(),
 
