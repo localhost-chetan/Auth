@@ -1,5 +1,5 @@
 import { resendClient } from "@lib/clients/resend";
-import { type Email, type VerificationCode } from "@api/types/user";
+import { type Email, type VerificationCode } from "@/api/schemas/user";
 
 export const sendVerificationEmail = async (email: Email, verificationCode: VerificationCode) => {
 	if (!verificationCode) {

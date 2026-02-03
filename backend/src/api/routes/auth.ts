@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { logOut, register, login, verifyEmail, forgotPassword } from "@api/controllers/auth";
+import { logOut, register, login, verifyEmail, forgotPassword, resetPassword } from "@api/controllers/auth";
 import { validator } from "hono/validator";
-import { signInSchema, signUpSchema, verificationSchema } from "@api/types/user";
+import { resetPasswordSchema, signInSchema, signUpSchema, verificationSchema } from "@api/schemas/auth";
 
 export const authRoute = new Hono()
 	.basePath("/api/auth/")
@@ -73,5 +73,23 @@ export const authRoute = new Hono()
 		(c) => {
 			const { email } = c.req.valid("json");
 			return forgotPassword(c, email);
+		},
+	)
+
+	.post(
+		"/reset-password/:token",
+		validator("json", (value, c) => {
+			const { success, data } = resetPasswordSchema.safeParse(value);
+
+			if (success) return data;
+			return c.json({ error: "Invalid password!" }, 400);
+		}),
+		(c) => {
+			const { token } = c.req.param();
+			const password = c.req.valid("json");
+
+			console.log("🚀 ~ auth.ts:91 ~ password: ", password);
+
+			return resetPassword(c, token, password);
 		},
 	);

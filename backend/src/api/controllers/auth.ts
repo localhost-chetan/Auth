@@ -1,6 +1,5 @@
 import { userTable } from "@/db/schema";
 import { drizzlePgClient } from "@lib/clients/drizzle";
-import { type VerificationCode, type SignUpInput, type SignInInput, type Email } from "@api/types/user";
 import { type Context } from "hono";
 import { and, eq, gt, sql } from "drizzle-orm";
 import { setAccessTokenCookie } from "@api/services/jwt";
@@ -9,6 +8,7 @@ import { deleteCookie } from "hono/cookie";
 import { generateOTP } from "@api/services/otp";
 import { randomUUIDv7 } from "bun";
 import { getClientUrl } from "@utils/service-urls";
+import { ResetPasswordInput, VerificationCode, type SignInInput, type SignUpInput } from "@api/schemas/auth";
 
 export const register = async (c: Context, { name, email, password }: SignUpInput) => {
 	const userAlreadyExists = await drizzlePgClient.execute(sql`
@@ -193,7 +193,7 @@ export const verifyEmail = async (c: Context, verificationCode: VerificationCode
 	return c.json({ message: "Successfully verified your email" });
 };
 
-export const forgotPassword = async (c: Context, email: Email) => {
+export const forgotPassword = async (c: Context, email: string) => {
 	const users = await drizzlePgClient.select({ id: userTable }).from(userTable).where(eq(userTable.email, email));
 
 	console.log("🚀 ~ auth.ts:193 ~ forgotPassword ~ users: ", users);
@@ -222,4 +222,40 @@ export const forgotPassword = async (c: Context, email: Email) => {
 	await sendResetPasswordResetEmail(email, resetUrl);
 
 	return c.json({ success: true, message: "Password reset email sent successfully" }, 200);
+};
+
+export const resetPassword = async (c: Context, token: string, { password }: ResetPasswordInput) => {
+	const results = await drizzlePgClient.execute(sql`
+		SELECT
+			id
+		FROM
+			public.users
+		WHERE
+			reset_password_token = ${token}
+				AND
+			reset_password_token_expires_at > NOW();
+		`);
+
+	console.log("🚀 ~ auth.ts:239 ~ resetPassword ~ results: ", results);
+
+	if (results.length <= 0) {
+		return c.json({ error: "Invalid or expires reset token", success: false }, 400);
+	}
+
+	const passwordHash = await Bun.password.hash(password, {
+		algorithm: "bcrypt",
+	});
+
+	await drizzlePgClient.execute(sql`
+		UPDATE
+			public.users
+		SET
+			password_hash = ${passwordHash},
+			reset_password_token = NULL,
+			reset_password_token_expires_at = NULL
+		WHERE
+			id = ${results.at(0)?.id};
+		`);
+
+	return c.json({ success: true, message: "Password updated successfully!" }, 200);
 };

@@ -1,5 +1,5 @@
 import { sign } from "hono/jwt";
-import { type UserId, type JWTPayload } from "@api/types/user";
+import { type UserId, type JWTPayload } from "@/api/schemas/user";
 import { Context } from "hono";
 import { getJWTPrivateKey } from "@utils/service-urls";
 import { setCookie } from "hono/cookie";
