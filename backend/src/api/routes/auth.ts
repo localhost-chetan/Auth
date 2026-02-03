@@ -2,9 +2,22 @@ import { Hono } from "hono";
 import { logOut, register, login, verifyEmail, forgotPassword, resetPassword } from "@api/controllers/auth";
 import { validator } from "hono/validator";
 import { resetPasswordSchema, signInSchema, signUpSchema, verificationSchema } from "@api/schemas/auth";
+import { checkAuth } from "@api/services/jwt";
+import { verifyToken } from "@api/middlewares/verify-token";
+import { type JWTPayload } from "@api/schemas/jwt";
 
-export const authRoute = new Hono()
-	.basePath("/api/auth/")
+type Variables = {
+	jwtPayload: JWTPayload;
+};
+
+export const authRoute = new Hono<{ Variables: Variables }>({ strict: true })
+	.basePath("/api/auth")
+
+	// check-auth
+	.get("/check-auth", verifyToken, async (c) => {
+		const userId = c.get("jwtPayload");
+		return checkAuth(c, userId.sub);
+	})
 
 	// /register
 	.post(
