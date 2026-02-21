@@ -36,6 +36,22 @@ export const authRoute = new Hono<{ Variables: Variables }>({ strict: true })
 		},
 	)
 
+	// /verify-email
+	.post(
+		"/verify-email",
+		validator("json", (value, c) => {
+			const { success, data } = verificationSchema.safeParse(value);
+
+			if (success) return data;
+
+			return c.json({ error: "Invalid Verification Code!" }, 400);
+		}),
+		(c) => {
+			const { verificationCode } = c.req.valid("json");
+			return verifyEmail(c, verificationCode);
+		},
+	)
+
 	// login
 	.post(
 		"/login",
@@ -55,22 +71,6 @@ export const authRoute = new Hono<{ Variables: Variables }>({ strict: true })
 	.delete("/logout", (c) => {
 		return logOut(c);
 	})
-
-	// /verify-email
-	.post(
-		"/verify-email",
-		validator("json", (value, c) => {
-			const { success, data } = verificationSchema.safeParse(value);
-
-			if (success) return data;
-
-			return c.json({ error: "Invalid Verification Code!" }, 400);
-		}),
-		(c) => {
-			const { verificationCode } = c.req.valid("json");
-			return verifyEmail(c, verificationCode);
-		},
-	)
 
 	// forgot-password
 	.post(

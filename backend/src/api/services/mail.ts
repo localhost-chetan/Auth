@@ -1,7 +1,6 @@
 import { resendClient } from "@lib/clients/resend";
-import { type Email, type VerificationCode } from "@/api/schemas/user";
 
-export const sendVerificationEmail = async (email: Email, verificationCode: VerificationCode) => {
+export const sendVerificationEmail = async (email: string, verificationCode: string) => {
 	if (!verificationCode) {
 		throw new Error("Verification code is missing!");
 	}
@@ -22,7 +21,7 @@ export const sendVerificationEmail = async (email: Email, verificationCode: Veri
 	}
 };
 
-export const sendResetPasswordResetEmail = async (email: Email, resetUrl: string) => {
+export const sendResetPasswordResetEmail = async (email: string, resetUrl: string) => {
 	const recipient = [email];
 	const { data, error } = await resendClient.emails.send({
 		from: "Auth <onboarding@resend.dev>",

@@ -1,4 +1,4 @@
-import { primaryKey, unique, boolean, timestamp, varchar, pgTable, serial } from "drizzle-orm/pg-core";
+import { primaryKey, unique, boolean, timestamp, varchar, pgTable, serial, text } from "drizzle-orm/pg-core";
 
 export const userTable = pgTable(
 	"users",
@@ -6,7 +6,7 @@ export const userTable = pgTable(
 		id: serial(),
 		name: varchar({ length: 255 }).notNull(),
 		email: varchar({ length: 255 }).notNull(),
-		passwordHash: varchar({ length: 255 }).notNull(),
+		passwordHash: text().notNull(),
 		lastLogin: timestamp().defaultNow(),
 		isVerified: boolean().default(false),
 		resetPasswordToken: varchar({ length: 255 }),

@@ -8,4 +8,4 @@ const sql = new SQL({
 	maxLifetime: 60,
 });
 
-export const drizzlePgClient = drizzle(sql, { casing: "snake_case", logger: true });
+export const drizzlePgClient = drizzle({ client: sql, casing: "snake_case", logger: true });

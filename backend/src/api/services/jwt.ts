@@ -4,7 +4,8 @@ import { getJWTPrivateKey } from "@utils/service-urls";
 import { setCookie } from "hono/cookie";
 import { type JWTPayload, type UserId } from "@api/schemas/jwt";
 import { drizzlePgClient } from "@lib/clients/drizzle";
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { userTable } from "@/db/schema";
 
 const generateAccessToken = async (userId: UserId) => {
 	const payload: JWTPayload = {
@@ -28,19 +29,31 @@ export const setAccessTokenCookie = async (c: Context, userId: UserId) => {
 
 export const checkAuth = async (c: Context, userId: UserId) => {
 	try {
-		const user = (
-			await drizzlePgClient.execute(sql`
-			SELECT
-				id,
-				name,
-				email,
-				is_verified
-			FROM
-				public.users
-			WHERE
-				id = ${userId};
-			`)
-		).at(0);
+		// const user = (
+		// 	await drizzlePgClient.execute(sql`
+		// 	SELECT
+		// 		id,
+		// 		name,
+		// 		email,
+		// 		is_verified
+		// 	FROM
+		// 		public.users
+		// 	WHERE
+		// 		id = ${userId};
+		// 	`)
+		// ).at(0);
+
+		const user = await drizzlePgClient
+			.select({
+				id: userTable.id,
+				name: userTable.name,
+				email: userTable.email,
+				isVerified: userTable.isVerified,
+			})
+			.from(userTable)
+			.where(eq(userTable.id, userId))
+			.limit(1)
+			.then((result) => result.at(0));
 
 		console.log("🚀 ~ jwt.ts:45 ~ checkAuth ~ user: ", user);
 
