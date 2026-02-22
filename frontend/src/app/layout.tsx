@@ -1,6 +1,7 @@
 import { type Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { FloatingBackground } from "@components/floating-background";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,8 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-linear-to-br from-gray-900 via-green-900 to-emerald-900 flex items-center justify-center`}
+        className={`${geistSans.variable} ${geistMono.variable} relative flex min-h-screen items-center justify-center overflow-hidden bg-linear-to-br from-gray-900 via-green-900 to-emerald-900 antialiased`}
       >
+        <FloatingBackground />
         {children}
       </body>
     </html>
