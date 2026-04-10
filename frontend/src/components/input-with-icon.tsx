@@ -8,6 +8,7 @@ type InputWithIconProps = InputHTMLAttributes<HTMLInputElement> & {
 export const InputWithIcon = ({
   icon: Icon,
   placeholder,
+  inputMode = "text",
   ...props
 }: InputWithIconProps) => {
   return (
@@ -16,7 +17,8 @@ export const InputWithIcon = ({
       <input
         {...props}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 text-sm placeholder-gray-500 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
+        inputMode={inputMode}
+        className="w-full rounded-lg border-2 border-gray-400 py-2 pr-4 pl-10 text-sm placeholder-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
       />
     </div>
   );
