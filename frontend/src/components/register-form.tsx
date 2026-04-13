@@ -28,7 +28,7 @@ export const RegisterForm = () => {
               placeholder="Your password"
               type="password"
             />
-            <PasswordStrengthMeter password={`ChetanSeervi_2361`} />
+            <PasswordStrengthMeter password={`Localhost_Chetan@2361`} />
           </div>
           <ActionButton text="Register" type="submit" />
         </form>

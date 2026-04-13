@@ -1,41 +1,42 @@
 import { Check, X } from "lucide-react";
 
+const PASSWORD_CRITERIA = [
+  {
+    label: "At least 8 characters",
+    test: (password: string) => password.length >= 8,
+  },
+  {
+    label: "Contains uppercase letters",
+    test: (password: string) => /[A-Z]/.test(password),
+  },
+  {
+    label: "Contains lowercase letters",
+    test: (password: string) => /[a-z]/.test(password),
+  },
+  {
+    label: "Contains a number",
+    test: (password: string) => /\d/.test(password),
+  },
+  {
+    label: "Contains a special character",
+    test: (password: string) => /[!@#$%^&*()_+-]/.test(password),
+  },
+];
+
 type PasswordCriteriaProps = {
   password: string;
 };
 
 const PasswordCriteria = ({ password }: PasswordCriteriaProps) => {
-  const criteria = [
-    {
-      label: "At least 8 characters",
-      isMet: password.length >= 8,
-    },
-    {
-      label: "Contains uppercase letter",
-      isMet: /[A-Z]/.test(password),
-    },
-    {
-      label: "Contains lowercase letter",
-      isMet: /[a-z]/.test(password),
-    },
-    {
-      label: "Contains number",
-      isMet: /\d/.test(password),
-    },
-    {
-      label: "Contains special character",
-      isMet: /[!@#$%^&*()_+-]/.test(password),
-    },
-  ];
   return (
     <div className="mt-2 space-y-1">
-      {criteria.map(({ label, isMet }) => (
+      {PASSWORD_CRITERIA.map(({ label, test }) => (
         <div key={label} className="flex items-center text-xs sm:text-sm">
           <span className="*:size-5">
-            {isMet ? <Check className="text-green-400" /> : <X />}
+            {test(password) ? <Check className="text-green-400" /> : <X />}
           </span>
           <span
-            className={`ml-2 ${isMet ? "text-green-500" : "text-gray-400"}`}
+            className={`ml-2 ${test(password) ? "text-green-500" : "text-gray-400"}`}
           >
             {label}
           </span>
@@ -67,12 +68,9 @@ const getStrengthText = (strength: number) => {
 };
 
 const getStrength = (password: string) => {
-  let strength = 0;
-  if (password.length >= 8) strength++;
-  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength++;
-  if (/\d/.test(password)) strength++;
-  if (/[!@#$%^&*()_+-]/.test(password)) strength++;
-  return strength;
+  return (
+    PASSWORD_CRITERIA.filter((criteria) => criteria.test(password)).length - 1
+  );
 };
 
 const getColor = (strength: number) => {

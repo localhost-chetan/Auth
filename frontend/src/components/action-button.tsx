@@ -10,7 +10,7 @@ type ActionButtonProps = {
 };
 
 export const ActionButton = ({ text, type }: ActionButtonProps) => {
-  const isLoading = true;
+  const isLoading = !true;
 
   return (
     <motion.div
@@ -19,7 +19,7 @@ export const ActionButton = ({ text, type }: ActionButtonProps) => {
       className="mt-5"
     >
       <Button
-        className="text-md w-full cursor-pointer bg-linear-to-br from-green-600 to-emerald-600 px-2 py-5 shadow-2xl"
+        className="text-md w-full cursor-pointer bg-linear-to-br from-green-600 to-emerald-700 px-2 py-5 shadow-2xl"
         type={type}
         disabled={isLoading}
       >

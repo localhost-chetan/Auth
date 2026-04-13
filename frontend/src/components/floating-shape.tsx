@@ -19,13 +19,13 @@ export const FloatingShape = ({
       style={{ top, left }}
       initial={{ x: 0, y: 0, rotate: 0 }}
       animate={{
-        x: [0, `${Math.ceil(Math.random() * 1000)}px`],
-        y: [0, `${Math.ceil(Math.random() * 1000)}px`],
+        x: [0, "80vw", "40vw", "-40vw", "-20vw", 0],
+        y: [0, "70vh", "-40vh", "35vh", "-20vh", 0],
         rotate: [0, 360],
       }}
       transition={{
         ease: "linear",
-        duration: 60,
+        duration: 120,
         repeat: Infinity,
         delay,
       }}
