@@ -21,7 +21,7 @@ export const register = async (c: Context, { name, email, password }: SignUpInpu
 		.then((result) => result.at(0));
 	console.log("🚀 ~ register ~ userAlreadyExists:", userAlreadyExists);
 
-	if (!userAlreadyExists) {
+	if (userAlreadyExists) {
 		return c.json({ error: "User with this email already exists" }, 400);
 	}
 	const passwordHash = await Bun.password.hash(password, {

@@ -2,8 +2,14 @@ import { Hono } from "hono";
 import { sql } from "drizzle-orm";
 import { drizzlePgClient } from "@lib/clients/drizzle";
 import { authRoute } from "@api/routes/auth";
+import { cors } from "hono/cors";
 
 const app = new Hono()
+	.use(cors({
+		origin: "http://localhost:3000", // Update this to match your frontend URL and port
+		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+	}))
+
 	.get("/", (c) => {
 		return c.json({ message: "Auth API Server" });
 	})

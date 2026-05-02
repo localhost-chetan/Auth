@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { Button } from "@shadcn/button";
 import { Loader } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 
 type ActionButtonProps = {
   text: string;
@@ -10,7 +11,7 @@ type ActionButtonProps = {
 };
 
 export const ActionButton = ({ text, type }: ActionButtonProps) => {
-  const isLoading = !true;
+  const { isLoading } = useAuthStore()
 
   return (
     <motion.div
