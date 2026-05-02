@@ -2,24 +2,27 @@
 
 import { FormWrapper } from "@components/form-wrapper";
 import { FormTitle } from "@components/form-title";
-import { type ChangeEvent, type MouseEvent, useRef, useState } from "react";
+import { type ChangeEvent, type MouseEvent, type SubmitEvent, useRef, useState } from "react";
 import { ActionButton } from "@components/action-button";
+import { useAuthActions } from "@/store/authStore";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export const VerificationForm = () => {
   const [OTP, setOTP] = useState<(string | undefined)[]>(
     new Array(6).fill(undefined),
   );
-  console.log("🚀 ~ VerificationForm ~ OTP:", OTP);
 
   const inputRefs = useRef<(HTMLInputElement | undefined)[]>([]);
-  console.log("🚀 ~ VerificationForm ~ inputRefs:", inputRefs);
+
+  const { verifyEmail } = useAuthActions();
+  const router = useRouter()
 
   const handleChange = (
     index: number,
     event: ChangeEvent<HTMLInputElement>,
   ) => {
     const value = event.currentTarget.value;
-    console.log("🚀 ~ handleChange ~ value:", value);
 
     setOTP((prevOTP) => {
       const newOTP = [...prevOTP];
@@ -39,9 +42,23 @@ export const VerificationForm = () => {
     if (isNaN(Number(value))) return;
   };
 
-  const handleClick = (index: number, event: MouseEvent<HTMLInputElement>) => {
+  const handleClick = (event: MouseEvent<HTMLInputElement>) => {
     event.currentTarget.setSelectionRange(1, 1);
   };
+
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const verificationCode = OTP.join("")
+
+    try {
+      await verifyEmail(verificationCode)
+      router.push("/login")
+      toast.success("Email verified successfully! Please login to continue.")
+    } catch (error) {
+      toast.error((error as Error).message || "Failed to verify email. Please try again.")
+    }
+  }
 
   return (
     <FormWrapper>
@@ -51,7 +68,7 @@ export const VerificationForm = () => {
           Enter a 6-digit OTP sent to your email address.
         </p>
 
-        <form onSubmit={() => {}}>
+        <form onSubmit={handleSubmit}>
           <div className="mt-4 flex justify-center gap-3">
             {new Array(6).fill(0).map((_, index) => (
               <input
@@ -64,7 +81,7 @@ export const VerificationForm = () => {
                 pattern="[0-9]"
                 autoComplete="one-time-code"
                 value={OTP.at(index) ?? ""}
-                onClick={(event) => handleClick(index, event)}
+                onClick={(event) => handleClick(event)}
                 onChange={(event) => handleChange(index, event)}
                 className="size-10 rounded-md border-3 border-green-300/50 p-2 text-center select-none focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none sm:size-12 sm:text-xl md:size-13 md:rounded-xl md:text-2xl"
               />

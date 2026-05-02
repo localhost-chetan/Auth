@@ -10,6 +10,7 @@ import { ActionButton } from "@components/action-button";
 import { useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthActions, useAuthStore } from "@/store/authStore";
+import { toast } from "sonner";
 
 export const RegisterForm = () => {
   const [name, setName] = useState("");
@@ -27,9 +28,9 @@ export const RegisterForm = () => {
     try {
       await register(email, password, name);
       router.push("/verify-email");
-
+      toast.success("Registration successful! Please check your email for the verification code.");
     } catch (error) {
-      console.error("Error occurred while registering: ", error);
+      toast.error((error as Error).message || "Failed to register. Please try again.");
     }
   };
 

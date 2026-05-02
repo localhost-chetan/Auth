@@ -3,8 +3,9 @@ import { type Metadata } from "next";
 import { Inter, Geist } from "next/font/google";
 import { FloatingBackground } from "@components/floating-background";
 import { cn } from "@/lib/utils";
+import { Toaster } from "sonner";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,7 +26,9 @@ export default function RootLayout({
       <body className="flex min-h-screen items-center justify-center">
         <FloatingBackground />
         {children}
-      </body>
-    </html>
+
+        <Toaster richColors duration={3000} position="top-center" />
+      </body >
+    </html >
   );
 }

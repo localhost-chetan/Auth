@@ -4,6 +4,7 @@ const API_URL = "http://localhost:3002/api/auth";
 
 type AuthActions = {
     register: (email: string, password: string, name: string) => Promise<void>;
+    verifyEmail: (code: string) => Promise<void>;
 }
 
 type AuthState = {
@@ -43,6 +44,29 @@ export const useAuthStore = create<AuthState>()((set) => {
                     set(() => ({ isLoading: false, user }));
                 } catch (error) {
                     set(() => ({ isLoading: false, error: (error as Error).message }));
+                    throw error;
+                }
+            },
+
+            verifyEmail: async (verificationCode: string) => {
+                set({ isLoading: true, error: null });
+
+                try {
+                    const response = await fetch(`${API_URL}/verify-email`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ verificationCode })
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || "Failed to verify email.");
+                    }
+                    const user = await response.json();
+                    set({ isLoading: false, user, isAuthenticated: true });
+                } catch (error) {
+                    set({ isLoading: false, error: (error as Error).message });
                     throw error;
                 }
             }
