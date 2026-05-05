@@ -6,6 +6,7 @@ type AuthActions = {
     register: (email: string, password: string, name: string) => Promise<void>;
     verifyEmail: (code: string) => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
+    logout: () => Promise<void>;
 }
 
 type AuthState = {
@@ -17,9 +18,11 @@ type AuthState = {
     actions: AuthActions;
 }
 
-const authFetch = async (endpoint: string, body?: object, headers?: Record<string, string>) => {
+type Method = "POST" | "GET" | "PUT" | "DELETE" | "PATCH";
+
+const authFetch = async (endpoint: string, body?: object, method: Method = "POST", headers?: Record<string, string>) => {
     const response = await fetch(`${API_URL}/${endpoint}`, {
-        method: body ? "POST" : "GET",
+        method,
         headers: {
             "Content-Type": "application/json",
             ...headers
@@ -74,10 +77,17 @@ export const useAuthStore = create<AuthState>()((set) => {
                     const user = await authFetch("login", { email, password });
                     set({ user, isAuthenticated: true });
                 });
+            },
+
+            logout: async () => {
+                await withLoading(async () => {
+                    await authFetch("logout", {}, "DELETE");
+                    set({ user: null, isAuthenticated: false });
+                });
             }
         }
     }
-})
+});
 
 export const useAuthActions = () => {
     return useAuthStore((state) => state.actions);

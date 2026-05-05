@@ -27,7 +27,7 @@ export const LoginForm = () => {
 
     try {
       await login(email, password);
-      router.push("/")
+      router.push("/dashboard")
       toast.success("Logged in successfully!");
     } catch (error) {
       toast.error((error as Error).message || "Failed to login. Please try again.");
