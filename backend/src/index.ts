@@ -8,6 +8,7 @@ const app = new Hono()
 	.use(cors({
 		origin: "http://localhost:3000", // Update this to match your frontend URL and port
 		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+		credentials: true
 	}))
 
 	.get("/", (c) => {

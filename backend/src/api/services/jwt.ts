@@ -21,8 +21,8 @@ export const setAccessTokenCookie = async (c: Context, userId: UserId) => {
 
 	setCookie(c, "access_token", await generateAccessToken(userId), {
 		httpOnly: true, // cookie can not be accessed by client side Javascript, only accessed by the server
-		secure: isProduction,
-		sameSite: isProduction ? "strict" : "none",
+		secure: isProduction, // cookie will only be sent over HTTPS in production
+		sameSite: isProduction ? "strict" : "lax", // in production, cookie will only be sent for same site requests, in development, cookie will be sent for cross site requests as well
 		maxAge: 24 * 60 * 60, // 24 hours
 	});
 };

@@ -50,7 +50,6 @@ export const register = async (c: Context, { name, email, password }: SignUpInpu
 		return c.json({ error: "User creation failed!" }, 500);
 	}
 
-	await setAccessTokenCookie(c, createdUser.id);
 	try {
 		if (!createdUser.verificationToken) {
 			return c.json({ error: "Something wrong with verification token" }, 500);
@@ -108,7 +107,7 @@ export const login = async (c: Context, loginCredentails: SignInInput) => {
 		return c.json({ success: false, message: `Invalid password` });
 	}
 
-	setAccessTokenCookie(c, user.id);
+	await setAccessTokenCookie(c, user.id);
 
 	await drizzlePgClient
 		.update(userTable)

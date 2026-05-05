@@ -11,6 +11,7 @@ import { useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthActions, useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
+import { FormError } from "@components/FormError";
 
 export const RegisterForm = () => {
   const [name, setName] = useState("");
@@ -58,7 +59,7 @@ export const RegisterForm = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
 
-            {error && <p className="text-destructive brightness-125 text-sm font-semibold mt-2">{error}</p>}
+            {error && <FormError error={error} />}
 
             <PasswordStrengthMeter password={password} />
           </div>
