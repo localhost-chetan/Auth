@@ -1,1 +1,1 @@
-export { userTable, type User } from "@/db/schema/user";
+export { userTable, type PublicUser } from "@/db/schema/user";

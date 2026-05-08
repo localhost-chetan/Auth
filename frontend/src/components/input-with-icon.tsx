@@ -14,7 +14,7 @@ export const InputWithIcon = ({
   ...props
 }: InputWithIconProps) => {
   return (
-    <div className="relative">
+    <div className={cn("relative", className)}>
       {Icon && (
         <Icon className="absolute top-1/2 left-3 size-5 -translate-y-1/2 text-gray-400" />
       )}
@@ -22,10 +22,7 @@ export const InputWithIcon = ({
         {...props}
         placeholder={placeholder}
         inputMode={inputMode}
-        className={cn(
-          "w-full rounded-lg border-2 border-gray-400 py-2 pr-4 pl-10 text-sm placeholder-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none",
-          className,
-        )}
+        className={"w-full rounded-lg border-2 border-gray-400 py-2 pr-4 pl-10 text-sm placeholder-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"}
       />
     </div>
   );

@@ -23,4 +23,6 @@ export const userTable = pgTable(
 	},
 );
 
-export type User = typeof userTable.$inferSelect;
+type User = typeof userTable.$inferSelect;
+
+export type PublicUser = Omit<User, "passwordHash" | "verificationToken" | "verificationTokenExpiresAt" | "resetPasswordToken" | "resetPasswordTokenExpiresAt">;

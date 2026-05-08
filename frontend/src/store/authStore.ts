@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { type PublicUser } from "../../../backend/src/db/schema";
 
 const API_URL = "http://localhost:3002/api/auth";
 
@@ -7,12 +8,14 @@ type AuthActions = {
     verifyEmail: (code: string) => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    forgotPassword: (email: string) => Promise<void>;
 }
 
 type AuthState = {
-    user: any | null;
+    user: PublicUser | null;
     isAuthenticated: boolean;
     error: string | null;
+    message: string | null;
     isLoading: boolean;
     isCheckingAuth: boolean;
     actions: AuthActions;
@@ -54,6 +57,7 @@ export const useAuthStore = create<AuthState>()((set) => {
         user: null,
         isAuthenticated: false,
         error: null,
+        message: null,
         isLoading: false,
         isCheckingAuth: true,
 
@@ -83,6 +87,13 @@ export const useAuthStore = create<AuthState>()((set) => {
                 await withLoading(async () => {
                     await authFetch("logout", {}, "DELETE");
                     set({ user: null, isAuthenticated: false });
+                });
+            },
+
+            forgotPassword: async (email: string) => {
+                await withLoading(async () => {
+                    const { message } = await authFetch("forgot-password", { email }, "POST");
+                    set({ message });
                 });
             }
         }
