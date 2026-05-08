@@ -1,4 +1,4 @@
-import { userTable } from "@/db/schema";
+import { type PublicUser, userTable } from "@/db/schema";
 import { drizzlePgClient } from "@lib/clients/drizzle";
 import { type Context } from "hono";
 import { and, eq, gt, sql } from "drizzle-orm";
@@ -9,6 +9,7 @@ import { generateOTP } from "@api/services/otp";
 import { randomUUIDv7 } from "bun";
 import { getClientUrl } from "@utils/service-urls";
 import { ResetPasswordInput, VerificationCode, type SignInInput, type SignUpInput } from "@api/schemas/auth";
+import { type UserId } from "@api/schemas/jwt";
 
 export const register = async (c: Context, { name, email, password }: SignUpInput) => {
 	const userAlreadyExists = await drizzlePgClient
@@ -66,10 +67,14 @@ export const register = async (c: Context, { name, email, password }: SignUpInpu
 	return c.json(
 		{
 			message: "New User created successfully!",
-			data: {
+			user: {
 				id: createdUser.id,
 				name: createdUser.name,
 				email: createdUser.email,
+				isVerified: createdUser.isVerified,
+				lastLogin: createdUser.lastLogin,
+				createdAt: createdUser.createdAt,
+				updatedAt: createdUser.updatedAt,
 			},
 		},
 		{
@@ -222,4 +227,35 @@ export const resetPassword = async (c: Context, token: string, password: ResetPa
 		.where(eq(userTable.id, user.id));
 
 	return c.json({ success: true, message: "Password updated successfully!" }, 200);
+};
+
+
+export const checkAuth = async (c: Context, userId: UserId) => {
+	try {
+		const user = await drizzlePgClient
+			.select({
+				id: userTable.id,
+				name: userTable.name,
+				email: userTable.email,
+				isVerified: userTable.isVerified,
+				lastLogin: userTable.lastLogin,
+				createdAt: userTable.createdAt,
+				updatedAt: userTable.updatedAt,
+			})
+			.from(userTable)
+			.where(eq(userTable.id, userId))
+			.limit(1)
+			.then((result) => result.at(0));
+
+		console.log("🚀 ~ jwt.ts:45 ~ checkAuth ~ user: ", user);
+
+		if (!user) {
+			return c.json({ success: false, message: "User not found" }, 400);
+		}
+
+		return c.json({ success: true, user });
+	} catch (error) {
+		console.log(`Error in checkAuth => ${error}`);
+		return c.json({ success: false, message: error });
+	}
 };

@@ -1,8 +1,7 @@
 import { Hono } from "hono";
-import { logOut, register, login, verifyEmail, forgotPassword, resetPassword } from "@api/controllers/auth";
+import { logOut, register, login, verifyEmail, forgotPassword, resetPassword, checkAuth } from "@api/controllers/auth";
 import { validator } from "hono/validator";
 import { resetPasswordSchema, signInSchema, signUpSchema, verificationSchema } from "@api/schemas/auth";
-import { checkAuth } from "@api/services/jwt";
 import { verifyToken } from "@api/middlewares/verify-token";
 import { type JWTPayload } from "@api/schemas/jwt";
 

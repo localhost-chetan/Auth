@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { type PublicUser } from "../../../backend/src/db/schema";
+import { type PublicUser } from "@backend/db/schema/user";
 
 const API_URL = "http://localhost:3002/api/auth";
 
@@ -10,6 +10,7 @@ type AuthActions = {
     logout: () => Promise<void>;
     forgotPassword: (email: string) => Promise<void>;
     resetPassword: (token: string, newPassword: string) => Promise<void>;
+    checkAuth: (userId: string) => Promise<void>;
 }
 
 type AuthState = {
@@ -65,21 +66,21 @@ export const useAuthStore = create<AuthState>()((set) => {
         actions: {
             register: async (email: string, password: string, name: string) => {
                 await withLoading(async () => {
-                    const user = await authFetch<PublicUser>("register", { email, password, name });
+                    const { user } = await authFetch<{ user: PublicUser }>("register", { email, password, name });
                     set({ user })
                 });
             },
 
             verifyEmail: async (verificationCode: string) => {
                 await withLoading(async () => {
-                    const user = await authFetch<PublicUser>("verify-email", { verificationCode });
+                    const { user } = await authFetch<{ user: PublicUser }>("verify-email", { verificationCode });
                     set({ user, isAuthenticated: true });
                 });
             },
 
             login: async (email: string, password: string) => {
                 await withLoading(async () => {
-                    const user = await authFetch<PublicUser>("login", { email, password });
+                    const { user } = await authFetch<{ user: PublicUser }>("login", { email, password });
                     set({ user, isAuthenticated: true });
                 });
             },
@@ -102,6 +103,13 @@ export const useAuthStore = create<AuthState>()((set) => {
                 await withLoading(async () => {
                     const { message } = await authFetch<{ message: string }>(`reset-password/${token}`, { token, password: newPassword });
                     set({ message });
+                });
+            },
+
+            checkAuth: async (userId: string) => {
+                await withLoading(async () => {
+                    const { user } = await authFetch<{ user: PublicUser }>(`check-auth/${userId}`, {}, "GET");
+                    set({ user, isAuthenticated: true });
                 });
             }
         }
