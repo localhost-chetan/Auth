@@ -9,6 +9,7 @@ type AuthActions = {
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
     forgotPassword: (email: string) => Promise<void>;
+    resetPassword: (token: string, newPassword: string) => Promise<void>;
 }
 
 type AuthState = {
@@ -23,7 +24,7 @@ type AuthState = {
 
 type Method = "POST" | "GET" | "PUT" | "DELETE" | "PATCH";
 
-const authFetch = async (endpoint: string, body?: object, method: Method = "POST", headers?: Record<string, string>) => {
+const authFetch = async <T>(endpoint: string, body?: object, method: Method = "POST", headers?: Record<string, string>) => {
     const response = await fetch(`${API_URL}/${endpoint}`, {
         method,
         headers: {
@@ -37,7 +38,7 @@ const authFetch = async (endpoint: string, body?: object, method: Method = "POST
         const { error } = await response.json();
         throw new Error(error || "Authentication error");
     }
-    return response.json();
+    return response.json() as Promise<T>;
 }
 
 export const useAuthStore = create<AuthState>()((set) => {
@@ -64,35 +65,42 @@ export const useAuthStore = create<AuthState>()((set) => {
         actions: {
             register: async (email: string, password: string, name: string) => {
                 await withLoading(async () => {
-                    const user = await authFetch("register", { email, password, name });
+                    const user = await authFetch<PublicUser>("register", { email, password, name });
                     set({ user })
                 });
             },
 
             verifyEmail: async (verificationCode: string) => {
                 await withLoading(async () => {
-                    const user = await authFetch("verify-email", { verificationCode });
+                    const user = await authFetch<PublicUser>("verify-email", { verificationCode });
                     set({ user, isAuthenticated: true });
                 });
             },
 
             login: async (email: string, password: string) => {
                 await withLoading(async () => {
-                    const user = await authFetch("login", { email, password });
+                    const user = await authFetch<PublicUser>("login", { email, password });
                     set({ user, isAuthenticated: true });
                 });
             },
 
             logout: async () => {
                 await withLoading(async () => {
-                    await authFetch("logout", {}, "DELETE");
+                    await authFetch<void>("logout", {}, "DELETE");
                     set({ user: null, isAuthenticated: false });
                 });
             },
 
             forgotPassword: async (email: string) => {
                 await withLoading(async () => {
-                    const { message } = await authFetch("forgot-password", { email }, "POST");
+                    const { message } = await authFetch<{ message: string }>("forgot-password", { email }, "POST");
+                    set({ message });
+                });
+            },
+
+            resetPassword: async (token: string, newPassword: string) => {
+                await withLoading(async () => {
+                    const { message } = await authFetch<{ message: string }>(`reset-password/${token}`, { token, password: newPassword });
                     set({ message });
                 });
             }

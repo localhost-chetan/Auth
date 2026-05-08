@@ -5,4 +5,4 @@ export const resetPasswordSchema = z.object({
 	password: passwordStringSchema,
 });
 
-export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>["password"];

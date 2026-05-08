@@ -99,7 +99,7 @@ export const authRoute = new Hono<{ Variables: Variables }>({ strict: true })
 		}),
 		(c) => {
 			const { token } = c.req.param();
-			const password = c.req.valid("json");
+			const { password } = c.req.valid("json");
 
 			console.log("🚀 ~ auth.ts:91 ~ password: ", password);
 

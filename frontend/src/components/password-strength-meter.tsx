@@ -1,3 +1,4 @@
+import { cn } from "@lib/utils";
 import { Check, X } from "lucide-react";
 
 const PASSWORD_CRITERIA = [
@@ -48,6 +49,7 @@ const PasswordCriteria = ({ password }: PasswordCriteriaProps) => {
 
 type PasswordStrengthMeterProps = {
   password: string;
+  className?: string;
 };
 
 const getStrengthText = (strength: number) => {
@@ -92,11 +94,12 @@ const getColor = (strength: number) => {
 
 export const PasswordStrengthMeter = ({
   password,
+  className
 }: PasswordStrengthMeterProps) => {
   const strength = getStrength(password);
 
   return (
-    <div className="mt-2">
+    <div className={cn("mt-2", className)}>
       <div className="mb-1 flex items-center justify-between text-xs">
         <span className="">Password Strength</span>
         <span className="">{getStrengthText(strength)}</span>

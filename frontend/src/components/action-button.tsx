@@ -10,7 +10,7 @@ type ActionButtonProps = {
   type?: "button" | "submit" | "reset";
 };
 
-export const ActionButton = ({ text, type }: ActionButtonProps) => {
+export const ActionButton = ({ text, type = "submit" }: ActionButtonProps) => {
   const { isLoading } = useAuthStore()
 
   return (

@@ -41,7 +41,7 @@ export const ForgotPasswordForm = () => {
                         <FormText text="Enter your email address and we'll send you a link to reset your password." />
 
                         <form onSubmit={handleSubmit}>
-                            <InputWithIcon icon={Mail} placeholder="Enter your email" inputMode="email" autoFocus className="mt-5" value={email} onChange={(event) => { setEmail(event.target.value) }} />
+                            <InputWithIcon required icon={Mail} placeholder="Enter your email" inputMode="email" autoFocus className="mt-5" value={email} onChange={(event) => { setEmail(event.target.value) }} />
                             <ActionButton text="Send Reset Link" />
                         </form>
                     </div>

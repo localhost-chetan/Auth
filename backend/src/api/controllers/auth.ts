@@ -94,17 +94,14 @@ export const login = async (c: Context, loginCredentails: SignInInput) => {
 
 	const user = users.at(0);
 	if (!user) {
-		return c.json({ error: "Invalid credentails", success: false }, 400);
-	}
-
-	if (user.email !== email) {
-		return c.json({ success: false, message: "Invalid email id" });
+		return c.json({ error: "Invalid email or password", success: false }, 400);
 	}
 
 	const isPasswordValid = await Bun.password.verify(password, user.passwordHash);
+	console.log("🚀 ~ login ~ isPasswordValid:", isPasswordValid)
 
 	if (!isPasswordValid) {
-		return c.json({ success: false, message: `Invalid password` });
+		return c.json({ error: "Invalid password", success: false }, 400);
 	}
 
 	await setAccessTokenCookie(c, user.id);
@@ -116,12 +113,12 @@ export const login = async (c: Context, loginCredentails: SignInInput) => {
 		})
 		.where(eq(userTable.id, user.id));
 
-	return c.json({ message: "Logged in successfully" }, 201);
+	return c.json({ message: "Logged in successfully", success: true }, 201);
 };
 
 export const logOut = (c: Context) => {
 	deleteCookie(c, "access_token");
-	return c.json({ message: "Logged out successfully", success: true });
+	return c.json({ message: "Logged out successfully", success: true }, 200);
 };
 
 export const verifyEmail = async (c: Context, verificationCode: VerificationCode) => {
@@ -193,7 +190,7 @@ export const forgotPassword = async (c: Context, email: string) => {
 	return c.json({ success: true, message: "Password reset email sent successfully" }, 200);
 };
 
-export const resetPassword = async (c: Context, token: string, { password }: ResetPasswordInput) => {
+export const resetPassword = async (c: Context, token: string, password: ResetPasswordInput) => {
 	const user = await drizzlePgClient
 		.select({
 			id: userTable.id,
