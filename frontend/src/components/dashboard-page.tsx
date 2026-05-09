@@ -23,7 +23,7 @@ const InfoItem = ({ icon: Icon, label, value, secondary }: InfoItemProps) => (
 
         <div className="flex flex-col gap-y-3.5">
             <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="text-sm font-medium text-primary">{value ?? "N/A"}</p>
+            <p className="text-sm font-medium">{value ?? "N/A"}</p>
             {secondary && <p className="text-xs text-muted-foreground">{secondary}</p>}
         </div>
     </div>
@@ -39,7 +39,7 @@ export const DashboardPage = () => {
                 <div className="p-2 sm:p-4 md:p-6 lg:p-8 *:text-primary">
                     <FormTitle title="Dashboard" />
 
-                    <div className="mt-6 space-y-4 text-primary">
+                    <div className="mt-6 space-y-4 text-primary-foreground">
                         <InfoItem icon={User} label="Name" value={user?.name} />
                         <InfoItem icon={Mail} label="Email" value={user?.email} />
                         <InfoItem icon={Shield} label="Verified" value={user?.isVerified ? "Yes" : "No"} />
@@ -47,7 +47,9 @@ export const DashboardPage = () => {
                         <InfoItem icon={Calendar} label="Member Since" value={formatDate(user?.createdAt)} />
                     </div>
 
-                    <Logout className="my-5 w-full" />
+                    <div className="mt-4">
+                        <Logout className="w-full py-5" />
+                    </div>
                 </div>
             </FormWrapper>
         </Wrapper>

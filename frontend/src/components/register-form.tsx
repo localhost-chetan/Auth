@@ -19,17 +19,17 @@ export const RegisterForm = () => {
   const [password, setPassword] = useState("");
 
   const error = useAuthStore((state) => (state.error));
+
   const { register } = useAuthActions();
   const router = useRouter();
 
   const handleSignUp = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Handle sign-up logic here
 
     try {
-      await register(email, password, name);
+      const message = await register(email, password, name);
       router.push("/verify-email");
-      toast.success("Registration successful! Please check your email for the verification code.");
+      toast.success(message);
     } catch (error) {
       toast.error((error as Error).message || "Failed to register. Please try again.");
     }

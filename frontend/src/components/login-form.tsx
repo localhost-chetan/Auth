@@ -26,9 +26,9 @@ export const LoginForm = () => {
     event.preventDefault();
 
     try {
-      await login(email, password);
+      const message = await login(email, password);
       router.push("/dashboard")
-      toast.success("Logged in successfully!");
+      toast.success(message);
     } catch (error) {
       toast.error((error as Error).message || "Failed to login. Please try again.");
     }

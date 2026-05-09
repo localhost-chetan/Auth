@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect } from "react"
+import { type PropsWithChildren, useEffect } from "react"
 import { Spinner } from "@components/spinner"
 import { useAuthActions, useAuthStore } from "@/store/authStore"
 
-export const SessionRestore = () => {
+export const ProtectedLayout = ({ children }: PropsWithChildren) => {
     const { checkAuth } = useAuthActions()
     const isCheckingAuth = useAuthStore((state) => state.isCheckingAuth)
     const user = useAuthStore((state) => state.user)
@@ -27,5 +27,5 @@ export const SessionRestore = () => {
         );
     }
 
-    return null;
+    return <>{children}</>;
 }

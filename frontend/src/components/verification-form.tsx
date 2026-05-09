@@ -16,6 +16,7 @@ export const VerificationForm = () => {
   const inputRefs = useRef<(HTMLInputElement | undefined)[]>([]);
 
   const { verifyEmail } = useAuthActions();
+
   const router = useRouter()
 
   const handleChange = (
@@ -52,9 +53,9 @@ export const VerificationForm = () => {
     const verificationCode = OTP.join("")
 
     try {
-      await verifyEmail(verificationCode)
+      const message = await verifyEmail(verificationCode)
       router.push("/login")
-      toast.success("Email verified successfully! Please login to continue.")
+      toast.success(message);
     } catch (error) {
       toast.error((error as Error).message || "Failed to verify email. Please try again.")
     }

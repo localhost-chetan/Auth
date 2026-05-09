@@ -10,83 +10,67 @@ import { randomUUIDv7 } from "bun";
 import { getClientUrl } from "@utils/service-urls";
 import { ResetPasswordInput, VerificationCode, type SignInInput, type SignUpInput } from "@api/schemas/auth";
 import { type UserId } from "@api/schemas/jwt";
+import { type ApiResponse } from "@lib/types";
 
 export const register = async (c: Context, { name, email, password }: SignUpInput) => {
-	const userAlreadyExists = await drizzlePgClient
-		.select({
-			id: userTable.id,
-		})
+	const existingUser = await drizzlePgClient
+		.select({ id: userTable.id })
 		.from(userTable)
 		.where(eq(userTable.email, email))
 		.limit(1)
 		.then((result) => result.at(0));
-	console.log("🚀 ~ register ~ userAlreadyExists:", userAlreadyExists);
 
-	if (userAlreadyExists) {
+	if (existingUser) {
 		return c.json({ error: "User with this email already exists" }, 400);
 	}
-	const passwordHash = await Bun.password.hash(password, {
-		algorithm: "bcrypt",
-	});
-	// const verificationToken = Math.round(Math.random() * 10_00_000).toString();
-	const verificationToken = generateOTP();
 
-	console.log("🚀 ~ auth.ts:23 ~ signUp ~ verificationToken: ", verificationToken);
+	const hashedPassword = await Bun.password.hash(password, { algorithm: "bcrypt" });
+	const emailVerificationToken = generateOTP();
 
-	const newUser = await drizzlePgClient
+	const registeredUser = await drizzlePgClient
 		.insert(userTable)
 		.values({
 			name,
 			email,
-			passwordHash,
-			verificationToken,
+			passwordHash: hashedPassword,
+			verificationToken: emailVerificationToken,
 			verificationTokenExpiresAt: sql`NOW() + interval '10 MINUTES'`,
 		})
-		.returning();
-	console.log("🚀 ~ register ~ newUser:", newUser);
+		.returning({
+			id: userTable.id,
+			name: userTable.name,
+			email: userTable.email,
+			isVerified: userTable.isVerified,
+			lastLogin: userTable.lastLogin,
+			createdAt: userTable.createdAt,
+			updatedAt: userTable.updatedAt,
+			verificationToken: userTable.verificationToken,
+		})
+		.then((result) => result.at(0));
 
-	// Type guard
-	const createdUser = newUser.at(0);
-	if (!createdUser) {
-		return c.json({ error: "User creation failed!" }, 500);
+	if (!registeredUser) {
+		return c.json({ error: "User creation failed" }, 500);
 	}
 
 	try {
-		if (!createdUser.verificationToken) {
-			return c.json({ error: "Something wrong with verification token" }, 500);
+		if (!registeredUser.verificationToken) {
+			return c.json({ error: "Something went wrong with verification token" }, 500);
 		}
-
-		await sendVerificationEmail(createdUser.email, createdUser.verificationToken);
+		await sendVerificationEmail(registeredUser.email, registeredUser.verificationToken);
 	} catch (error) {
-		if (error instanceof Error) {
-			return c.json({ error: error.message }, 400);
-		}
-		return c.json({ error: "Something went wrong!" }, 400);
+		return c.json({ error: error instanceof Error ? error.message : "Something went wrong" }, 500);
 	}
 
-	return c.json(
-		{
-			message: "New User created successfully!",
-			user: {
-				id: createdUser.id,
-				name: createdUser.name,
-				email: createdUser.email,
-				isVerified: createdUser.isVerified,
-				lastLogin: createdUser.lastLogin,
-				createdAt: createdUser.createdAt,
-				updatedAt: createdUser.updatedAt,
-			},
-		},
-		{
-			status: 201,
-		},
+	const { verificationToken: _, ...safeRegisteredUser } = registeredUser;
+
+	return c.json<ApiResponse<typeof safeRegisteredUser>>(
+		{ message: "Registration successful! Please check your email to verify your account.", data: safeRegisteredUser },
+		201,
 	);
 };
 
-export const login = async (c: Context, loginCredentails: SignInInput) => {
-	const { email, password } = loginCredentails;
-
-	const users = await drizzlePgClient
+export const login = async (c: Context, { email, password }: SignInInput) => {
+	const user = await drizzlePgClient
 		.select({
 			id: userTable.id,
 			email: userTable.email,
@@ -99,36 +83,29 @@ export const login = async (c: Context, loginCredentails: SignInInput) => {
 		})
 		.from(userTable)
 		.where(eq(userTable.email, email))
-		.limit(1);
+		.limit(1)
+		.then((result) => result.at(0));
 
-	const user = users.at(0);
-	if (!user) {
-		return c.json({ error: "Invalid email or password", success: false }, 400);
-	}
-
-	const isPasswordValid = await Bun.password.verify(password, user.passwordHash);
-	console.log("🚀 ~ login ~ isPasswordValid:", isPasswordValid)
-
-	if (!isPasswordValid) {
-		return c.json({ error: "Invalid password", success: false }, 400);
+	// Same message for both cases — prevents email enumeration
+	if (!user || !(await Bun.password.verify(password, user.passwordHash))) {
+		return c.json({ error: "Invalid email or password" }, 400);
 	}
 
 	await setAccessTokenCookie(c, user.id);
 
 	await drizzlePgClient
 		.update(userTable)
-		.set({
-			lastLogin: sql`NOW()`,
-		})
+		.set({ lastLogin: sql`NOW()` })
 		.where(eq(userTable.id, user.id));
 
-	const { passwordHash, ...safeUser } = user
-	return c.json({ message: "Logged in successfully", success: true, user: safeUser }, 201);
+	const { passwordHash: _, ...safeUser } = user;
+
+	return c.json<ApiResponse<typeof safeUser>>({ message: "Logged in successfully", data: safeUser }, 200);
 };
 
 export const logOut = (c: Context) => {
 	deleteCookie(c, "access_token");
-	return c.json({ message: "Logged out successfully", success: true }, 200);
+	return c.json({ message: "Logged out successfully" }, 200);
 };
 
 export const verifyEmail = async (c: Context, verificationCode: VerificationCode) => {
@@ -137,7 +114,7 @@ export const verifyEmail = async (c: Context, verificationCode: VerificationCode
 			email: userTable.email,
 			isVerified: userTable.isVerified,
 			verificationToken: userTable.verificationToken,
-			verificationTokenExpiresAT: userTable.verificationTokenExpiresAt,
+			verificationTokenExpiresAt: userTable.verificationTokenExpiresAt,
 		})
 		.from(userTable)
 		.where(
@@ -148,26 +125,20 @@ export const verifyEmail = async (c: Context, verificationCode: VerificationCode
 		)
 		.then((result) => result.at(0));
 
-	console.log("🚀 ~ user.ts:99 ~ verifyEmail ~ user: ", user);
-
 	if (!user) {
-		return c.json({ error: `Your verification token is either invalid or expired` }, 400);
+		return c.json({ error: "Verification token is invalid or expired" }, 400);
 	}
 
-	if (!user.email) {
-		return c.json({ error: `Something wrong with user email` }, 400);
-	} else {
-		await drizzlePgClient
-			.update(userTable)
-			.set({
-				isVerified: true,
-				verificationToken: null,
-				verificationTokenExpiresAt: null,
-			})
-			.where(eq(userTable.email, user.email));
-	}
+	await drizzlePgClient
+		.update(userTable)
+		.set({
+			isVerified: true,
+			verificationToken: null,
+			verificationTokenExpiresAt: null,
+		})
+		.where(eq(userTable.email, user.email));
 
-	return c.json({ message: "Successfully verified your email" });
+	return c.json({ message: "Email verified successfully" }, 200);
 };
 
 export const forgotPassword = async (c: Context, email: string) => {
@@ -177,13 +148,10 @@ export const forgotPassword = async (c: Context, email: string) => {
 		.where(eq(userTable.email, email))
 		.then((result) => result.at(0));
 
-	console.log("🚀 ~ auth.ts:193 ~ forgotPassword ~ user: ", user);
-
 	if (!user) {
-		return c.json({ error: "User with this email not found!" }, 400);
+		return c.json({ error: "User with this email not found" }, 404);
 	}
 
-	// Generate reset token
 	const resetPasswordToken = randomUUIDv7("base64url", Date.now());
 
 	await drizzlePgClient
@@ -197,31 +165,22 @@ export const forgotPassword = async (c: Context, email: string) => {
 	const resetUrl = `${getClientUrl()}/reset-password/${resetPasswordToken}`;
 	await sendResetPasswordResetEmail(email, resetUrl);
 
-	return c.json({ success: true, message: "Password reset email sent successfully" }, 200);
+	return c.json({ message: "Password reset email sent successfully" }, 200);
 };
 
 export const resetPassword = async (c: Context, token: string, password: ResetPasswordInput) => {
 	const user = await drizzlePgClient
-		.select({
-			id: userTable.id,
-		})
+		.select({ id: userTable.id })
 		.from(userTable)
 		.where(and(eq(userTable.resetPasswordToken, token), gt(userTable.resetPasswordTokenExpiresAt, sql`NOW()`)))
 		.then((result) => result.at(0));
 
-	console.log("🚀 ~ auth.ts:239 ~ resetPassword ~ user: ", user);
-
 	if (!user) {
-		return c.json({ error: "Invalid or expires reset token", success: false }, 400);
+		return c.json({ error: "Reset token is invalid or expired" }, 400);
 	}
 
-	const passwordHash = await Bun.password.hash(password, {
-		algorithm: "bcrypt",
-	});
+	const passwordHash = await Bun.password.hash(password, { algorithm: "bcrypt" });
 
-	if (!user.id) {
-		return c.json({ error: "Something wrong with user id!" }, 500);
-	}
 	await drizzlePgClient
 		.update(userTable)
 		.set({
@@ -231,9 +190,8 @@ export const resetPassword = async (c: Context, token: string, password: ResetPa
 		})
 		.where(eq(userTable.id, user.id));
 
-	return c.json({ success: true, message: "Password updated successfully!" }, 200);
+	return c.json({ message: "Password reset successfully! You can now login with your new password." }, 200);
 };
-
 
 export const checkAuth = async (c: Context, userId: UserId) => {
 	try {
@@ -252,15 +210,12 @@ export const checkAuth = async (c: Context, userId: UserId) => {
 			.limit(1)
 			.then((result) => result.at(0));
 
-		console.log("🚀 ~ jwt.ts:45 ~ checkAuth ~ user: ", user);
-
 		if (!user) {
-			return c.json({ success: false, message: "User not found" }, 400);
+			return c.json({ error: "User not found" }, 404);
 		}
 
-		return c.json({ success: true, user });
+		return c.json<ApiResponse<typeof user>>({ data: user }, 200);
 	} catch (error) {
-		console.log(`Error in checkAuth => ${error}`);
-		return c.json({ success: false, message: error });
+		return c.json({ error: "Internal server error" }, 500);
 	}
 };

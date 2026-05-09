@@ -4,7 +4,6 @@ import { Inter, Geist } from "next/font/google";
 import { FloatingBackground } from "@components/floating-background";
 import { cn } from "@lib/utils";
 import { Toaster } from "sonner";
-import { SessionRestore } from "@components/session-restore";
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -23,13 +22,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("h-full", "antialiased dark", inter.className, "font-sans", geist.variable)}>
-      <body className="flex min-h-screen items-center justify-center">
+    <html lang="en" className={cn("h-full", "antialiased", inter.className, "font-sans", geist.variable)}>
+      <body className="flex min-h-screen items-center justify-center text-primary-foreground">
         <FloatingBackground />
 
-        <SessionRestore />
-
-        {children}
+        <main>
+          {children}
+        </main>
 
         <Toaster richColors duration={3000} position="top-center" />
       </body >

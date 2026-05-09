@@ -34,9 +34,9 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
                 setError("Passwords do not match")
                 return
             }
-            await resetPassword(token, newPassword)
+            const message = await resetPassword(token, newPassword)
             router.push("/login")
-            toast.success("Password reset successfully! You can now login with your new password.")
+            toast.success(message)
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "An error occurred")
             setError(error instanceof Error ? error.message : "An error occurred")

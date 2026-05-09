@@ -9,7 +9,7 @@ export const proxy: NextProxy = (request) => {
         if (!accessToken) {
             return NextResponse.redirect(new URL("/login", request.url));
         }
-    } else if (pathname === "/login" || pathname === "/verify-email") {
+    } else if (pathname === "/login" || pathname === "/verify-email" || pathname === "/forgot-password" || pathname.startsWith("/reset-password")) {
         if (accessToken) {
             return NextResponse.redirect(new URL("/dashboard", request.url));
         }
