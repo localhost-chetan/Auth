@@ -10,7 +10,7 @@ type AuthActions = {
     logout: () => Promise<void>;
     forgotPassword: (email: string) => Promise<void>;
     resetPassword: (token: string, newPassword: string) => Promise<void>;
-    checkAuth: (userId: string) => Promise<void>;
+    checkAuth: () => Promise<void>;
 }
 
 type AuthState = {
@@ -106,10 +106,11 @@ export const useAuthStore = create<AuthState>()((set) => {
                 });
             },
 
-            checkAuth: async (userId: string) => {
+            checkAuth: async () => {
+                set({ isCheckingAuth: true });
                 await withLoading(async () => {
-                    const { user } = await authFetch<{ user: PublicUser }>(`check-auth/${userId}`, {}, "GET");
-                    set({ user, isAuthenticated: true });
+                    const { user } = await authFetch<{ user: PublicUser }>(`check-auth`, undefined, "GET");
+                    set({ user, isAuthenticated: true, isCheckingAuth: false });
                 });
             }
         }

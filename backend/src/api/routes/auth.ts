@@ -14,8 +14,8 @@ export const authRoute = new Hono<{ Variables: Variables }>({ strict: true })
 
 	// check-auth
 	.get("/check-auth", verifyToken, async (c) => {
-		const userId = c.get("jwtPayload");
-		return checkAuth(c, userId.sub);
+		const { sub } = c.get("jwtPayload");
+		return checkAuth(c, sub);
 	})
 
 	// /register

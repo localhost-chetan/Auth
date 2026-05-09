@@ -2,8 +2,8 @@
 
 import { motion } from "motion/react";
 import { Button } from "@shadcn/button";
-import { Loader } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import { Spinner } from "@components/spinner";
 
 type ActionButtonProps = {
   text: string;
@@ -24,7 +24,7 @@ export const ActionButton = ({ text, type = "submit" }: ActionButtonProps) => {
         type={type}
         disabled={isLoading}
       >
-        {isLoading ? <Loader className="size-5 animate-spin" /> : text}
+        {isLoading ? <Spinner /> : text}
       </Button>
     </motion.div>
   );

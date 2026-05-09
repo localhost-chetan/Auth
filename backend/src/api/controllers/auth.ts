@@ -1,4 +1,4 @@
-import { type PublicUser, userTable } from "@/db/schema";
+import { userTable } from "@/db/schema";
 import { drizzlePgClient } from "@lib/clients/drizzle";
 import { type Context } from "hono";
 import { and, eq, gt, sql } from "drizzle-orm";
@@ -92,6 +92,10 @@ export const login = async (c: Context, loginCredentails: SignInInput) => {
 			email: userTable.email,
 			passwordHash: userTable.passwordHash,
 			lastLogin: userTable.lastLogin,
+			name: userTable.name,
+			isVerified: userTable.isVerified,
+			createdAt: userTable.createdAt,
+			updatedAt: userTable.updatedAt,
 		})
 		.from(userTable)
 		.where(eq(userTable.email, email))
@@ -118,7 +122,8 @@ export const login = async (c: Context, loginCredentails: SignInInput) => {
 		})
 		.where(eq(userTable.id, user.id));
 
-	return c.json({ message: "Logged in successfully", success: true }, 201);
+	const { passwordHash, ...safeUser } = user
+	return c.json({ message: "Logged in successfully", success: true, user: safeUser }, 201);
 };
 
 export const logOut = (c: Context) => {

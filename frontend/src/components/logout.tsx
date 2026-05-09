@@ -1,11 +1,16 @@
 'use client'
 
+import { cn } from "@lib/utils"
 import { useAuthActions } from "@/store/authStore"
 import { Button } from "@shadcn/button"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-export const Logout = () => {
+type LogoutProps = {
+    className?: string;
+}
+
+export const Logout = ({ className }: LogoutProps) => {
     const { logout } = useAuthActions()
 
     const router = useRouter()
@@ -17,6 +22,6 @@ export const Logout = () => {
     }
 
     return (
-        <Button variant={"default"} onClick={handleLogout}>Logout</Button>
+        <Button variant={"default"} onClick={handleLogout} className={cn(className)}>Logout</Button>
     )
 }
