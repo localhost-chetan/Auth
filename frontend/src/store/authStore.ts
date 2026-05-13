@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { type PublicUser } from "@backend/db/schema/user";
 
 const API_URL = "http://localhost:3002/api/auth";
 
@@ -11,6 +10,16 @@ type AuthActions = {
     forgotPassword: (email: string) => Promise<string>;
     resetPassword: (token: string, newPassword: string) => Promise<string>;
     checkAuth: () => Promise<void>;
+};
+
+type PublicUser = {
+    id: string;
+    name: string;
+    email: string;
+    isVerified: boolean;
+    lastLogin: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 type AuthState = {

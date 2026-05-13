@@ -34,10 +34,7 @@
       ],
       "@shadcn/*": [
         "./src/components/ui/*"
-      ],
-      "@backend/*": [
-        "../backend/src/*"
-      ],
+      ]
     }
   },
   "include": [
