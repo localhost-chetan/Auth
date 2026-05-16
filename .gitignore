@@ -48,3 +48,10 @@ next-env.d.ts
 
 # OS
 Thumbs.db
+
+# aws
+.aws-sam
+.pem
+
+# drizzle
+drizzle/

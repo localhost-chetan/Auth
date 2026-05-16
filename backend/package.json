@@ -2,7 +2,9 @@
 	"name": "backend",
 	"scripts": {
 		"dev": "bun run --hot src/index.ts",
-		"db:push": "bunx --bun drizzle-kit push"
+		"db:push": "bunx --bun drizzle-kit push",
+		"db:generate": "bunx --bun drizzle-kit generate",
+		"build": "bun build ./src/index.ts --outdir ./out --target bun --minify --drop-console --production --splitting && bun run db:generate"
 	},
 	"prettier": {
 		"useTabs": true,

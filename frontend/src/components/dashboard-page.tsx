@@ -22,8 +22,8 @@ const InfoItem = ({ icon: Icon, label, value, secondary }: InfoItemProps) => (
         <Icon className="size-5 text-green-400" />
 
         <div className="flex flex-col gap-y-3.5">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="text-sm font-medium">{value ?? "N/A"}</p>
+            <p className="text-xs">{label}</p>
+            <p className="text-sm font-medium text-secondary">{value ?? "N/A"}</p>
             {secondary && <p className="text-xs text-muted-foreground">{secondary}</p>}
         </div>
     </div>
@@ -36,7 +36,7 @@ export const DashboardPage = () => {
     return (
         <Wrapper>
             <FormWrapper>
-                <div className="p-2 sm:p-4 md:p-6 lg:p-8 *:text-primary">
+                <div className="p-2 sm:p-4 md:p-6 lg:p-8">
                     <FormTitle title="Dashboard" />
 
                     <div className="mt-6 space-y-4 text-primary-foreground">
